@@ -1,16 +1,37 @@
 from socket import socket,SOCK_STREAM,AF_INET
-from datetime import datetime
+from base64 import b64encode
+from json import dumps
+from threading import Thread
+
 
 
 def main():
-    server=socket(family=AF_INET,type=SOCK_STREAM)
-    server.bind(('192.168.1.2',6789))
+
+    class fileTransferHandler(Thread):
+        def __init__(self,cclient):
+            super().__init__()
+            self.cclient=cclient
+        
+        def run(self):
+            my_dict={}
+            my_dict['filename']='guido.jpg'
+            my_dict['filedata']=data
+            json_str=dumps(my_dict)
+            self.cclient.send(json_str.encode('utf-8'))
+            self.cclient.close()
+    server = socket()
+    # 2.绑定IP地址和端口(区分不同的服务)
+    server.bind(('127.0.0.1', 5566))
+    # 3.开启监听 - 监听客户端连接到服务器
     server.listen(512)
+    print('服务器启动开始监听...')
+    with open('guido.jpg', 'rb') as f:
+        # 将二进制数据处理成base64再解码成字符串
+        data = b64encode(f.read()).decode('utf-8')
     while True:
-        client,addr=server.accept()
-        print(str(addr)+'连接到了服务器')
-        client.send(str(datetime.now()).encode('utf-8'))
-        client.close()
+        client, addr = server.accept()
+        # 启动一个线程来处理客户端的请求
+        FileTransferHandler(client).start()
 
 if __name__ == '__main__':
     main()
